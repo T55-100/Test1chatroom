@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test1chatroom - 登录</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-box">
+            <h2>Test1chatroom</h2>
+            <p class="subtitle">加入局域网聊天室</p>
+            
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="nickname">昵称</label>
+                    <input type="text" id="nickname" placeholder="请输入您的昵称" required>
+                    <small id="nickname-hint" class="hint"></small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="server">服务器地址</label>
+                    <select id="server" required>
+                        <option value="">加载中...</option>
+                    </select>
+                </div>
+                
+                <button type="submit" id="login-btn">登录</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 获取服务器列表
+        async function loadServers() {
+            try {
+                const response = await fetch('/api/servers');
+                const servers = await response.json();
+                const serverSelect = document.getElementById('server');
+                
+                serverSelect.innerHTML = '';
+                servers.forEach(server => {
+                    const option = document.createElement('option');
+                    option.value = server.address;
+                    option.textContent = server.name;
+                    serverSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('加载服务器列表失败:', error);
+                const serverSelect = document.getElementById('server');
+                serverSelect.innerHTML = '<option value="http://127.0.0.1:5000">本地服务器</option>';
+            }
+        }
+
+        // 检查昵称是否已被使用
+        async function checkNickname(nickname) {
+            try {
+                const response = await fetch('/api/check_nickname', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ nickname })
+                });
+                const result = await response.json();
+                return result.taken;
+            } catch (error) {
+                console.error('检查昵称失败:', error);
+                return false;
+            }
+        }
+
+        // 页面加载时执行
+        document.addEventListener('DOMContentLoaded', () => {
+            loadServers();
+            
+            const nicknameInput = document.getElementById('nickname');
+            const nicknameHint = document.getElementById('nickname-hint');
+            const loginBtn = document.getElementById('login-btn');
+            
+            // 昵称输入验证
+            nicknameInput.addEventListener('input', async () => {
+                const nickname = nicknameInput.value.trim();
+                
+                if (nickname.length < 2) {
+                    nicknameHint.textContent = '昵称至少需要2个字符';
+                    nicknameHint.classList.add('error');
+                    loginBtn.disabled = true;
+                } else if (nickname.length > 20) {
+                    nicknameHint.textContent = '昵称不能超过20个字符';
+                    nicknameHint.classList.add('error');
+                    loginBtn.disabled = true;
+                } else {
+                    const isTaken = await checkNickname(nickname);
+                    if (isTaken) {
+                        nicknameHint.textContent = '该昵称已被使用';
+                        nicknameHint.classList.add('error');
+                        loginBtn.disabled = true;
+                    } else {
+                        nicknameHint.textContent = '昵称可用';
+                        nicknameHint.classList.remove('error');
+                        nicknameHint.classList.add('success');
+                        loginBtn.disabled = false;
+                    }
+                }
+            });
+            
+            // 表单提交
+            document.getElementById('login-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const nickname = nicknameInput.value.trim();
+                const server = document.getElementById('server').value;
+                
+                // 保存用户信息到localStorage
+                localStorage.setItem('nickname', nickname);
+                localStorage.setItem('server', server);
+                
+                // 跳转到聊天页面
+                window.location.href = '/chat';
+            });
+        });
+    </script>
+</body>
+</html>

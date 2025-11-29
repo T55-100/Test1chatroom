@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test1chatroom - 聊天室</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="chat-container">
+        <!-- 头部 -->
+        <div class="chat-header">
+            <h2>Test1chatroom</h2>
+            <button id="exit-btn" class="exit-btn">
+                <i class="fas fa-sign-out-alt"></i> 退出
+            </button>
+        </div>
+        
+        <div class="chat-main">
+            <!-- 侧边栏 - 在线用户列表 -->
+            <div class="sidebar">
+                <div class="sidebar-header">
+                    <h3><i class="fas fa-users"></i> 在线用户</h3>
+                </div>
+                <div class="users-list" id="users-list">
+                    <p class="loading">加载中...</p>
+                </div>
+            </div>
+            
+            <!-- 聊天区域 -->
+            <div class="chat-messages" id="chat-messages">
+                <div class="welcome-message">
+                    <p>欢迎来到聊天室！请遵守聊天室规则，文明交流。</p>
+                    <p class="hint">使用 @昵称 可以提醒特定用户，@川小农 可以与AI对话，@电影 URL 可以播放电影</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 底部输入区域 -->
+        <div class="chat-form">
+            <div class="input-group">
+                <button id="emoji-btn" class="emoji-btn">
+                    <i class="far fa-smile"></i>
+                </button>
+                <input type="text" id="message-input" placeholder="输入消息... 使用 @ 可以提醒特定用户">
+                <button id="send-btn" class="send-btn">发送</button>
+            </div>
+            
+            <!-- Emoji选择器 -->
+            <div id="emoji-picker" class="emoji-picker">
+                <div class="emojis">
+                    <span>😀</span><span>😃</span><span>😄</span><span>😁</span><span>😆</span><span>😅</span><span>😂</span><span>🤣</span><span>😊</span><span>😇</span>
+                    <span>🙂</span><span>🙃</span><span>😉</span><span>😌</span><span>😍</span><span>🥰</span><span>😘</span><span>😗</span><span>😙</span><span>😚</span>
+                    <span>😋</span><span>😛</span><span>😝</span><span>😜</span><span>🤑</span><span>🤗</span><span>🤓</span><span>😎</span><span>🤡</span><span>🤠</span>
+                    <span>😏</span><span>😒</span><span>😞</span><span>😔</span><span>😟</span><span>😕</span><span>🙁</span><span>☹️</span><span>😣</span><span>😖</span>
+                    <span>😫</span><span>😩</span><span>😢</span><span>😭</span><span>😤</span><span>😠</span><span>😡</span><span>🤬</span><span>🤯</span><span>😳</span>
+                    <span>🥵</span><span>🥶</span><span>😱</span><span>😨</span><span>😰</span><span>😥</span><span>😓</span><span>🤔</span><span>🤭</span><span>🤫</span>
+                    <span>🤥</span><span>😶</span><span>😐</span><span>😑</span><span>😬</span><span>🙄</span><span>😯</span><span>😦</span><span>😧</span><span>😮</span>
+                    <span>😲</span><span>🥱</span><span>😴</span><span>🤤</span><span>😪</span><span>😵</span><span>🤐</span><span>🥴</span><span>🤢</span><span>🤮</span>
+                    <span>🤧</span><span>😷</span><span>🤒</span><span>🤕</span><span>😈</span><span>👿</span><span>👹</span><span>👺</span><span>🤡</span><span>💩</span>
+                    <span>👻</span><span>💀</span><span>☠️</span><span>👽</span><span>👾</span><span>🤖</span><span>🎃</span><span>😺</span><span>😸</span><span>😹</span>
+                    <span>😻</span><span>😼</span><span>😽</span><span>🙀</span><span>😿</span><span>😾</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.4/socket.io.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // 获取用户信息
+            const nickname = localStorage.getItem('nickname');
+            
+            if (!nickname) {
+                // 如果没有昵称信息，返回登录页
+                window.location.href = '/';
+                return;
+            }
+            
+            // 连接Socket.IO
+            const socket = io();
+            
+            // 页面元素
+            const chatMessages = document.getElementById('chat-messages');
+            const messageInput = document.getElementById('message-input');
+            const sendBtn = document.getElementById('send-btn');
+            const usersList = document.getElementById('users-list');
+            const exitBtn = document.getElementById('exit-btn');
+            const emojiBtn = document.getElementById('emoji-btn');
+            const emojiPicker = document.getElementById('emoji-picker');
+            
+            // 加入聊天室
+            socket.emit('join', { nickname });
+            
+            // 更新在线用户列表
+            function updateUsers(users) {
+                usersList.innerHTML = '';
+                users.forEach(user => {
+                    const userElement = document.createElement('div');
+                    userElement.classList.add('user-item');
+                    userElement.innerHTML = `
+                        <span class="user-status"></span>
+                        <span class="user-name">${user}</span>
+                        ${user === nickname ? '<span class="self-tag">(我)</span>' : ''}
+                    `;
+                    usersList.appendChild(userElement);
+                });
+            }
+            
+            // 添加消息到聊天区域
+            function addMessage(messageData) {
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('message');
+                
+                // 判断是否为当前用户发送的消息
+                const isCurrentUser = messageData.nickname === nickname;
+                if (isCurrentUser) {
+                    messageElement.classList.add('my-message');
+                }
+                
+                if (messageData.type === 'movie') {
+                    // 电影消息
+                    messageElement.classList.add('movie-message');
+                    messageElement.innerHTML = `
+                        <div class="message-header">
+                            <span class="sender">${messageData.nickname}</span>
+                            <span class="time">${new Date().toLocaleTimeString()}</span>
+                        </div>
+                        <div class="message-content">
+                            <p>${messageData.message}</p>
+                            <div class="movie-player">
+                                <iframe src="${messageData.url}" frameborder="0" allowfullscreen></iframe>
+                            </div>
+                        </div>
+                    `;
+                } else if (messageData.type === 'ai_response') {
+                    // AI响应消息
+                    messageElement.classList.add('ai-message');
+                    messageElement.innerHTML = `
+                        <div class="message-header">
+                            <span class="sender">${messageData.nickname}</span>
+                            <span class="time">${new Date().toLocaleTimeString()}</span>
+                        </div>
+                        <div class="message-content">
+                            <p>${messageData.message}</p>
+                        </div>
+                    `;
+                } else if (messageData.type === 'mention') {
+                    // @提醒消息
+                    messageElement.classList.add('mention-message');
+                    // 高亮@的部分
+                    let highlightedMessage = messageData.message;
+                    if (messageData.mention === nickname) {
+                        messageElement.classList.add('mention-highlight');
+                    }
+                    messageElement.innerHTML = `
+                        <div class="message-header">
+                            <span class="sender">${messageData.nickname}</span>
+                            <span class="time">${new Date().toLocaleTimeString()}</span>
+                        </div>
+                        <div class="message-content">
+                            <p>${highlightedMessage}</p>
+                        </div>
+                    `;
+                } else if (messageData.type === 'text') {
+                    // 普通文本消息
+                    messageElement.classList.add('text-message');
+                    messageElement.innerHTML = `
+                        <div class="message-header">
+                            <span class="sender">${messageData.nickname}</span>
+                            <span class="time">${new Date().toLocaleTimeString()}</span>
+                        </div>
+                        <div class="message-content">
+                            <p>${messageData.message}</p>
+                        </div>
+                    `;
+                }
+                
+                chatMessages.appendChild(messageElement);
+                // 滚动到底部
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+            
+            // 发送消息
+            function sendMessage() {
+                const message = messageInput.value.trim();
+                if (message) {
+                    socket.emit('send_message', { message });
+                    messageInput.value = '';
+                }
+            }
+            
+            // 事件监听器
+            sendBtn.addEventListener('click', sendMessage);
+            
+            messageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+            
+            // 退出按钮
+            exitBtn.addEventListener('click', () => {
+                if (confirm('确定要退出聊天室吗？')) {
+                    socket.disconnect();
+                    localStorage.removeItem('nickname');
+                    window.location.href = '/';
+                }
+            });
+            
+            // Emoji选择器
+            emojiBtn.addEventListener('click', () => {
+                emojiPicker.classList.toggle('show');
+            });
+            
+            // 点击emoji添加到输入框
+            emojiPicker.querySelectorAll('.emojis span').forEach(emoji => {
+                emoji.addEventListener('click', () => {
+                    messageInput.value += emoji.textContent;
+                    messageInput.focus();
+                });
+            });
+            
+            // 点击其他地方关闭emoji选择器
+            document.addEventListener('click', (e) => {
+                if (!emojiBtn.contains(e.target) && !emojiPicker.contains(e.target)) {
+                    emojiPicker.classList.remove('show');
+                }
+            });
+            
+            // Socket.IO事件处理
+            socket.on('welcome', (data) => {
+                const welcomeElement = document.createElement('div');
+                welcomeElement.classList.add('system-message');
+                welcomeElement.innerHTML = `<p>${data.message}</p>`;
+                chatMessages.appendChild(welcomeElement);
+            });
+            
+            socket.on('receive_message', (data) => {
+                addMessage(data);
+            });
+            
+            socket.on('update_users', (data) => {
+                updateUsers(data.users);
+            });
+            
+            socket.on('user_joined', (data) => {
+                const joinElement = document.createElement('div');
+                joinElement.classList.add('system-message');
+                joinElement.innerHTML = `<p>${data.nickname} 加入了聊天室</p>`;
+                chatMessages.appendChild(joinElement);
+                updateUsers(data.users);
+            });
+            
+            socket.on('user_left', (data) => {
+                const leaveElement = document.createElement('div');
+                leaveElement.classList.add('system-message');
+                leaveElement.innerHTML = `<p>${data.nickname} 离开了聊天室</p>`;
+                chatMessages.appendChild(leaveElement);
+                updateUsers(data.users);
+            });
+            
+            // 处理断开连接
+            socket.on('disconnect', () => {
+                const disconnectElement = document.createElement('div');
+                disconnectElement.classList.add('system-message', 'error');
+                disconnectElement.innerHTML = `<p>与服务器断开连接，请刷新页面重试</p>`;
+                chatMessages.appendChild(disconnectElement);
+            });
+        });
+    </script>
+</body>
+</html>
