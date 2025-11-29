@@ -148,11 +148,13 @@ def handle_message(data):
         elif command == '@电影' and len(parts) > 1:
             # 处理电影播放指令
             movie_url = parts[1]
+            # 拼接解析地址
+            parsed_url = f'https://jx.m3u8.tv/jiexi/?url={movie_url}'
             emit('receive_message', {
                 'nickname': nickname,
                 'message': f'正在播放电影：{movie_url}',
                 'type': 'movie',
-                'url': movie_url
+                'url': parsed_url
             }, broadcast=True)
         else:
             # 处理@用户提醒
