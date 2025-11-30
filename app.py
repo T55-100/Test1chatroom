@@ -127,6 +127,27 @@ def get_weather_info(city):
         print(f"天气API调用失败: {e}")
         return {"code": 500, "msg": "天气信息获取失败", "data": None}
 
+def search_music(music_name):
+    """调用酷狗铃声搜索API获取音乐信息"""
+    url = "https://v2.xxapi.cn/api/kugousearch"
+    params = {
+        "music": music_name
+    }
+    headers = {
+        'User-Agent': 'xiaoxiaoapi/1.0.0'
+    }
+    
+    try:
+        response = requests.get(url, headers=headers, params=params)
+        response.raise_for_status()
+        result = response.json()
+        return result
+    except Exception as e:
+        print(f"音乐搜索API调用失败: {e}")
+        return {"code": 500, "msg": "音乐搜索失败", "data": None}
+
+
+
 @socketio.on('send_message')
 def handle_message(data):
     """处理发送消息"""
@@ -231,8 +252,8 @@ def handle_message(data):
                         forecast_list = weather_data.get('data', [])
                         if forecast_list and isinstance(forecast_list, list) and len(forecast_list) > 0:
                             # 获取今日天气
-                            today_forecast = forecast_list[0]
-                            
+                            today_forecast = forecast_list[1]
+                    
                             # 提取今日天气信息
                             weather_desc = today_forecast.get('weather', '未知')
                             temperature = today_forecast.get('temperature', '未知')
@@ -290,6 +311,54 @@ def handle_message(data):
                         'message': f"天气信息获取失败：{weather_result.get('msg', '未知错误')}",
                         'type': 'text'
                     }, broadcast=True)
+
+        elif command == '@音乐':
+            # 处理音乐搜索指令
+            if len(parts) > 1:
+                music_name = parts[1]
+                
+                # 先将用户的@音乐消息广播给所有用户
+                emit('receive_message', {
+                    'nickname': nickname,
+                    'message': message,
+                    'type': 'text'
+                }, broadcast=True)
+                
+                # 获取音乐搜索结果
+                music_result = search_music(music_name)
+                
+                if music_result.get('code') == 200:
+                    music_list = music_result.get('data', [])
+                    if music_list:
+                        # 发送音乐搜索结果列表
+                        emit('receive_message', {
+                            'nickname': '系统',
+                            'message': f'找到以下关于"{music_name}"的音乐：',
+                            'type': 'music_search_result',
+                            'music_list': music_list,
+                            'search_query': music_name
+                        }, broadcast=True)
+                    else:
+                        # 没有找到音乐
+                        emit('receive_message', {
+                            'nickname': '系统',
+                            'message': f'没有找到关于"{music_name}"的音乐',
+                            'type': 'text'
+                        }, broadcast=True)
+                else:
+                    # 音乐搜索失败
+                    emit('receive_message', {
+                        'nickname': '系统',
+                        'message': f'音乐搜索失败：{music_result.get("msg", "未知错误")}',
+                        'type': 'text'
+                    }, broadcast=True)
+            else:
+                # 没有提供音乐名称
+                emit('receive_message', {
+                    'nickname': '系统',
+                    'message': '请使用格式：@音乐 音乐名',
+                    'type': 'text'
+                }, broadcast=True)
         else:
             # 处理@用户提醒
             mention_nickname = command[1:]  # 去掉@符号

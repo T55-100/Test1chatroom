@@ -119,44 +119,81 @@ body {
     transition: background-color 0.5s ease, background-image 0.5s ease;
 }
 
+
+
+/* 动态渐变动画 */
+@keyframes gradient-flow {
+    0% {
+        background-position: 0% 50%;
+    }
+    25% {
+        background-position: 50% 50%;
+    }
+    50% {
+        background-position: 100% 100%;
+    }
+    75% {
+        background-position: 50% 100%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
 /* 天气背景样式 - 应用于系统聊天气泡 */
 .weather-message .message-content.weather-bg-sunny {
-    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffc107 100%);
+    background: linear-gradient(-45deg, #ff6b00, #ffd700, #ffed4e, #ff6b00);
+    background-size: 400% 400%;
+    animation: gradient-flow 5s ease infinite;
     opacity: 0.9;
 }
 
 .weather-message .message-content.weather-bg-cloudy {
-    background: linear-gradient(135deg, #b0c4de 0%, #d3d3d3 50%, #87ceeb 100%);
+    background: linear-gradient(-45deg, #4a90e2, #b0c4de, #87ceeb, #4a90e2);
+    background-size: 400% 400%;
+    animation: gradient-flow 5s ease infinite;
     opacity: 0.9;
 }
 
 .weather-message .message-content.weather-bg-rainy {
-    background: linear-gradient(135deg, #4682b4 0%, #87ceeb 50%, #00bfff 100%);
+    background: linear-gradient(-45deg, #003366, #4682b4, #00bfff, #003366);
+    background-size: 400% 400%;
+    animation: gradient-flow 5s ease infinite;
     opacity: 0.9;
 }
 
 .weather-message .message-content.weather-bg-snowy {
-    background: linear-gradient(135deg, #e0ffff 0%, #f0f8ff 50%, #b0e0e6 100%);
+    background: linear-gradient(-45deg, #00ffff, #e0ffff, #b0e0e6, #00ffff);
+    background-size: 400% 400%;
+    animation: gradient-flow 5s ease infinite;
     opacity: 0.9;
 }
 
 .weather-message .message-content.weather-bg-windy {
-    background: linear-gradient(135deg, #f5f5dc 0%, #faebd7 50%, #faf0e6 100%);
+    background: linear-gradient(-45deg, #ffcc66, #f5f5dc, #faf0e6, #ffcc66);
+    background-size: 400% 400%;
+    animation: gradient-flow 5s ease infinite;
     opacity: 0.9;
 }
 
 .weather-message .message-content.weather-bg-foggy {
-    background: linear-gradient(135deg, #dcdcdc 0%, #e8e8e8 50%, #f5f5f5 100%);
+    background: linear-gradient(-45deg, #666666, #dcdcdc, #f5f5f5, #666666);
+    background-size: 400% 400%;
+    animation: gradient-flow 5s ease infinite;
     opacity: 0.9;
 }
 
 .weather-message .message-content.weather-bg-thunder {
-    background: linear-gradient(135deg, #2f4f4f 0%, #483d8b 50%, #696969 100%);
+    background: linear-gradient(-45deg, #000033, #483d8b, #9933ff, #000033);
+    background-size: 400% 400%;
+    animation: gradient-flow 5s ease infinite;
     opacity: 0.9;
 }
 
 .weather-message .message-content.weather-bg-sand {
-    background: linear-gradient(135deg, #f4a460 0%, #deb887 50%, #d2b48c 100%);
+    background: linear-gradient(-45deg, #cc6600, #f4a460, #deb887, #cc6600);
+    background-size: 400% 400%;
+    animation: gradient-flow 5s ease infinite;
     opacity: 0.9;
 }
 
@@ -416,7 +453,7 @@ body {
     background: #d4edda;
     color: #155724;
 }
-
+/* 电影播放器样式 */
 .movie-player {
     margin-top: 0.5rem;
     border-radius: 6px;
@@ -429,8 +466,173 @@ body {
     border: none;
 }
 
+/* 音乐搜索结果表格样式 */
+.music-table-container {
+    margin-top: 10px;
+    overflow-x: auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.music-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #fff;
+}
+
+.music-table th,
+.music-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+    font-size: 14px;
+}
+
+.music-table th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+    color: #333;
+    position: sticky;
+    top: 0;
+}
+
+.music-table tr:hover {
+    background-color: #f5f5f5;
+}
+
+.select-music-btn {
+    padding: 6px 12px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background-color 0.3s ease;
+}
+
+.select-music-btn:hover {
+    background-color: #45a049;
+}
+
+/* 音乐播放器卡片样式 */
+.music-player-card {
+    background-color: #f0f4f8;
+    border: 1px solid #d0e1f9;
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.music-player-card:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+.music-header h3 {
+    margin: 0;
+    color: #2d3748;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.music-header p {
+    margin: 5px 0 0;
+    color: #718096;
+    font-size: 14px;
+}
+
+.music-content {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.music-cover {
+    flex-shrink: 0;
+}
+
+.music-cover img {
+    width: 120px;
+    height: 120px;
+    border-radius: 8px;
+    object-fit: cover;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease;
+}
+
+.music-cover img:hover {
+    transform: scale(1.05);
+}
+
+.music-player {
+    flex: 1;
+    min-width: 200px;
+}
+
+.music-player audio {
+    width: 100%;
+    height: 40px;
+    outline: none;
+}
+
+/* 音频控件样式美化 */
+.music-player audio::-webkit-media-controls-panel {
+    background-color: #f0f4f8;
+    border-radius: 8px;
+    padding: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.music-player audio::-webkit-media-controls-play-button,
+.music-player audio::-webkit-media-controls-pause-button {
+    background-color: #4CAF50;
+    border-radius: 50%;
+    padding: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s ease;
+}
+
+.music-player audio::-webkit-media-controls-play-button:hover,
+.music-player audio::-webkit-media-controls-pause-button:hover {
+    background-color: #45a049;
+}
+
+.music-player audio::-webkit-media-controls-current-time-display,
+.music-player audio::-webkit-media-controls-time-remaining-display {
+    color: #2d3748;
+    font-size: 12px;
+}
+
+.music-player audio::-webkit-media-controls-timeline {
+    background-color: #e2e8f0;
+    border-radius: 20px;
+    padding: 2px;
+    margin: 0 10px;
+}
+
+.music-player audio::-webkit-media-controls-timeline::-webkit-slider-thumb {
+    background-color: #4CAF50;
+    border-radius: 50%;
+    width: 15px;
+    height: 15px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+.music-player audio::-webkit-media-controls-timeline::-webkit-slider-thumb:hover {
+     background-color: #45a049;
+     transform: scale(1.2);
+ }
+
 /* 底部输入区域 */
-.chat-form {
+ .chat-form {
     padding: 1rem;
     background: #fff;
     border-top: 1px solid #e9ecef;

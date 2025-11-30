@@ -32,7 +32,7 @@
             <div class="chat-messages" id="chat-messages">
                 <div class="welcome-message">
                     <p>欢迎来到聊天室！请遵守聊天室规则，文明交流。</p>
-                    <p class="hint">使用 @昵称 可以提醒特定用户，@川小农 可以与AI对话，@电影 URL 可以播放电影，@天气 城市名 可以查询天气<br>@音乐 音乐名 可以搜索并播放音乐</p>
+                    <p class="hint">使用 @昵称 可以提醒特定用户<br>@川小农 可以与AI对话<br>@电影 URL 可以播放电影<br>@天气 城市名 可以查询天气<br>@音乐 音乐名 可以搜索并播放音乐</p>
                 </div>
             </div>
         </div>
@@ -68,6 +68,51 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.4/socket.io.min.js"></script>
     <script>
+        // 选择音乐 - 全局函数，供HTML onclick调用
+        function selectMusic(button, music, index) {
+            const chatMessages = document.getElementById('chat-messages');
+            
+            // 创建音乐播放器卡片
+            const playerCard = document.createElement('div');
+            playerCard.className = 'music-player-card';
+            playerCard.innerHTML = `
+                <div class="player-header">
+                    <div class="album-info">
+                        <img src="${music.image || 'https://via.placeholder.com/150'}" alt="专辑封面" class="album-cover">
+                        <div class="song-info">
+                            <h4 class="song-title">${music.song}</h4>
+                            <p class="singer">${music.singer}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="player-body">
+                    <audio controls autoplay>
+                        <source src="${music.url}" type="audio/mpeg">
+                        您的浏览器不支持音频播放。
+                    </audio>
+                </div>
+            `;
+            
+            // 创建消息元素
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', 'system-message');
+            
+            // 替换消息内容为音乐播放器
+            messageElement.innerHTML = `
+                <div class="message-header">
+                    <span class="sender">系统消息</span>
+                    <span class="time">${new Date().toLocaleTimeString()}</span>
+                </div>
+                <div class="message-content">
+                    <div class="system-message">已选择播放：${music.song} - ${music.singer}</div>
+                </div>
+            `;
+            messageElement.appendChild(playerCard);
+            
+            // 滚动到底部
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
         // 根据天气情况改变天气消息气泡背景
         function changeBackgroundByWeather(messageElement, weatherInfo, weatherType) {
             const messageContent = messageElement.querySelector('.message-content');
@@ -174,8 +219,10 @@
                 });
             }
             
-            // 选择音乐 - 全局函数，供HTML onclick调用
-            function selectMusic(btn, music, index) {
+            // 选择音乐 - 绑定到window对象，供HTML onclick调用
+            window.selectMusic = function(btn, music, index) {
+                // 获取聊天消息容器
+                const chatMessages = document.getElementById('chat-messages');
                 // 获取父级的消息元素
                 const messageElement = btn.closest('.message');
                 // 创建音乐播放器卡片
@@ -286,7 +333,7 @@
                     // 根据天气情况改变天气消息气泡背景
                     changeBackgroundByWeather(messageElement, messageData.weather_info, messageData.weather_type);
 
-                 } else if (messageData.type === 'text') {
+                } else if (messageData.type === 'text') {
                     // 普通文本消息
                     messageElement.classList.add('text-message');
                     messageElement.innerHTML = `
@@ -296,6 +343,42 @@
                         </div>
                         <div class="message-content">
                             <p>${messageData.message}</p>
+                        </div>
+                    `;
+                } else if (messageData.type === 'music_search_result') {
+                    // 音乐搜索结果消息
+                    messageElement.classList.add('music-search-result-message');
+                    messageElement.innerHTML = `
+                        <div class="message-header">
+                            <span class="sender">${messageData.nickname}</span>
+                            <span class="time">${new Date().toLocaleTimeString()}</span>
+                        </div>
+                        <div class="message-content">
+                            <div class="system-message">${messageData.message}</div>
+                            <div class="music-table-container">
+                                <table class="music-table">
+                                    <thead>
+                                        <tr>
+                                            <th>序号</th>
+                                            <th>歌曲名</th>
+                                            <th>歌手</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${messageData.music_list.map((music, index) => `
+                                            <tr>
+                                                <td>${index + 1}</td>
+                                                <td>${music.song}</td>
+                                                <td>${music.singer}</td>
+                                                <td>
+                                                    <button class="select-music-btn" onclick="selectMusic(this, ${JSON.stringify(music).replace(/"/g, '&quot;')}, ${index})">选择</button>
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     `;
                 }
