@@ -32,7 +32,7 @@
             <div class="chat-messages" id="chat-messages">
                 <div class="welcome-message">
                     <p>欢迎来到聊天室！请遵守聊天室规则，文明交流。</p>
-                    <p class="hint">使用 @昵称 可以提醒特定用户，@川小农 可以与AI对话，@电影 URL 可以播放电影，@天气 城市名 可以查询天气</p>
+                    <p class="hint">使用 @昵称 可以提醒特定用户，@川小农 可以与AI对话，@电影 URL 可以播放电影，@天气 城市名 可以查询天气<br>@音乐 音乐名 可以搜索并播放音乐</p>
                 </div>
             </div>
         </div>
@@ -172,6 +172,47 @@
                     `;
                     usersList.appendChild(userElement);
                 });
+            }
+            
+            // 选择音乐 - 全局函数，供HTML onclick调用
+            function selectMusic(btn, music, index) {
+                // 获取父级的消息元素
+                const messageElement = btn.closest('.message');
+                // 创建音乐播放器卡片
+                const playerCard = document.createElement('div');
+                playerCard.className = 'music-player-card';
+                playerCard.innerHTML = `
+                    <div class="music-header">
+                        <h3>正在播放：${music.song}</h3>
+                        <p>歌手：${music.singer}</p>
+                    </div>
+                    <div class="music-content">
+                        <div class="music-cover">
+                            <img src="${music.image || 'https://via.placeholder.com/150'}" alt="专辑封面" onerror="this.src='https://via.placeholder.com/150'">
+                        </div>
+                        <div class="music-player">
+                            <audio controls="controls" autoplay>
+                                <source src="${music.url}" type="audio/mpeg">
+                                您的浏览器不支持音频播放。
+                            </audio>
+                        </div>
+                    </div>
+                `;
+                
+                // 替换消息内容为音乐播放器
+                messageElement.innerHTML = `
+                    <div class="message-header">
+                        <span class="sender">系统消息</span>
+                        <span class="time">${new Date().toLocaleTimeString()}</span>
+                    </div>
+                    <div class="message-content">
+                        <div class="system-message">已选择播放：${music.song} - ${music.singer}</div>
+                    </div>
+                `;
+                messageElement.appendChild(playerCard);
+                
+                // 滚动到底部
+                chatMessages.scrollTop = chatMessages.scrollHeight;
             }
             
             // 添加消息到聊天区域
