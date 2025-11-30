@@ -32,7 +32,7 @@
             <div class="chat-messages" id="chat-messages">
                 <div class="welcome-message">
                     <p>欢迎来到聊天室！请遵守聊天室规则，文明交流。</p>
-                    <p class="hint">使用 @昵称 可以提醒特定用户，@川小农 可以与AI对话，@电影 URL 可以播放电影</p>
+                    <p class="hint">使用 @昵称 可以提醒特定用户，@川小农 可以与AI对话，@电影 URL 可以播放电影，@天气 城市名 可以查询天气</p>
                 </div>
             </div>
         </div>
@@ -68,7 +68,73 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.4/socket.io.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        // 根据天气情况改变天气消息气泡背景
+        function changeBackgroundByWeather(messageElement, weatherInfo, weatherType) {
+            const messageContent = messageElement.querySelector('.message-content');
+            
+            // 如果是关闭指令，移除所有天气消息的背景样式
+            if (weatherType === 'close' || !weatherInfo) {
+                // 移除所有天气消息的背景样式
+                const allWeatherMessages = document.querySelectorAll('.weather-message .message-content');
+                allWeatherMessages.forEach(content => {
+                    // 移除所有内联样式
+                    content.style.backgroundImage = '';
+                    content.style.backgroundSize = '';
+                    content.style.backgroundRepeat = '';
+                    content.style.backgroundPosition = '';
+                    content.style.color = '';
+                    content.style.textShadow = '';
+                    // 移除所有天气背景类
+                    content.classList.remove('weather-bg-sunny', 'weather-bg-cloudy', 'weather-bg-rainy', 'weather-bg-snowy', 'weather-bg-windy', 'weather-bg-foggy', 'weather-bg-thunder', 'weather-bg-sand');
+                });
+                return;
+            }
+            
+            // 移除内联样式（确保只使用CSS类）
+            messageContent.style.backgroundImage = '';
+            messageContent.style.backgroundSize = '';
+            messageContent.style.backgroundRepeat = '';
+            messageContent.style.backgroundPosition = '';
+            
+            // 设置文字颜色和阴影
+            messageContent.style.color = 'white';
+            messageContent.style.textShadow = '1px 1px 2px rgba(0, 0, 0, 0.7)';
+            
+            // 移除所有天气背景类
+            messageContent.classList.remove('weather-bg-sunny', 'weather-bg-cloudy', 'weather-bg-rainy', 'weather-bg-snowy', 'weather-bg-windy', 'weather-bg-foggy', 'weather-bg-thunder', 'weather-bg-sand');
+            
+            // 根据天气类型添加对应的背景类
+            switch(weatherType) {
+                case '晴':
+                    messageContent.classList.add('weather-bg-sunny');
+                    break;
+                case '云':
+                case '阴':
+                    messageContent.classList.add('weather-bg-cloudy');
+                    break;
+                case '雨':
+                    messageContent.classList.add('weather-bg-rainy');
+                    break;
+                case '雪':
+                    messageContent.classList.add('weather-bg-snowy');
+                    break;
+                case '风':
+                    messageContent.classList.add('weather-bg-windy');
+                    break;
+                case '雾':
+                    messageContent.classList.add('weather-bg-foggy');
+                    break;
+                case '雷':
+                    messageContent.classList.add('weather-bg-thunder');
+                    break;
+                case '沙':
+                    messageContent.classList.add('weather-bg-sand');
+                    break;
+                default:
+                    break;
+            }
+        }
+         document.addEventListener('DOMContentLoaded', () => {
             // 获取用户信息
             const nickname = localStorage.getItem('nickname');
             
@@ -163,7 +229,23 @@
                             <p>${highlightedMessage}</p>
                         </div>
                     `;
-                } else if (messageData.type === 'text') {
+                } else if (messageData.type === 'weather') {
+                    // 天气消息
+                    messageElement.classList.add('weather-message');
+                    messageElement.innerHTML = `
+                        <div class="message-header">
+                            <span class="sender">${messageData.nickname}</span>
+                            <span class="time">${new Date().toLocaleTimeString()}</span>
+                        </div>
+                        <div class="message-content">
+                            <p>${messageData.message}</p>
+                        </div>
+                    `;
+                    
+                    // 根据天气情况改变天气消息气泡背景
+                    changeBackgroundByWeather(messageElement, messageData.weather_info, messageData.weather_type);
+
+                 } else if (messageData.type === 'text') {
                     // 普通文本消息
                     messageElement.classList.add('text-message');
                     messageElement.innerHTML = `
