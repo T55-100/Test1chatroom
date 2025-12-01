@@ -37,7 +37,7 @@
             <div class="chat-messages" id="chat-messages">
                 <div class="welcome-message">
                     <p>欢迎来到聊天室！请遵守聊天室规则，文明交流。</p>
-                    <p class="hint">使用 @昵称 可以提醒特定用户<br>@川小农 可以与AI对话<br>@电影 URL 可以播放电影<br>@天气 城市名 可以查询天气<br>@音乐 音乐名 可以搜索并播放音乐</p>
+                    <p class="hint">使用 @昵称 可以提醒特定用户<br>@川小农 可以与AI对话<br>@电影 URL 可以播放电影<br>@天气 城市名 可以查询天气<br>@音乐 音乐名 可以搜索并播放音乐<br>@查新闻 可以快速获取当前新闻</p>
                 </div>
             </div>
         </div>
@@ -443,6 +443,18 @@
                                     </tbody>
                                 </table>
                             </div>
+                        </div>
+                    `;
+                } else if (messageData.type === 'news') {
+                    // 新闻消息
+                    messageElement.classList.add('news-message');
+                    messageElement.innerHTML = `
+                        <div class="message-header">
+                            <span class="sender">${messageData.nickname}</span>
+                            <span class="time">${new Date().toLocaleTimeString()}</span>
+                        </div>
+                        <div class="message-content">
+                            <div class="system-message">${messageData.message.replace(/\n/g, '<br>')}</div>
                         </div>
                     `;
                 }

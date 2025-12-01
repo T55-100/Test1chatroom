@@ -25,7 +25,12 @@
                 
                 <div class="form-group">
                     <label for="password">密码</label>
-                    <input type="password" id="password" name="password" placeholder="请输入密码" required>
+                    <div class="password-container">
+                        <input type="password" id="password" name="password" placeholder="请输入密码" required>
+                        <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility()" aria-label="显示/隐藏密码">
+                            <span class="toggle-password-icon">👁️</span>
+                        </button>
+                    </div>
                     <small id="password-hint" class="hint"></small>
                 </div>
                 
@@ -34,5 +39,21 @@
             <p class="switch-form">没有账号？<a href="{{ url_for('register') }}">注册</a></p>
         </div>
     </div>
+    
+    <script>
+        // 显示/隐藏密码功能
+        function togglePasswordVisibility() {
+            const passwordInput = document.getElementById('password');
+            const toggleBtn = document.querySelector('.toggle-password-icon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleBtn.textContent = '🙈';
+            } else {
+                passwordInput.type = 'password';
+                toggleBtn.textContent = '👁️';
+            }
+        }
+    </script>
 </body>
 </html>

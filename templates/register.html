@@ -24,12 +24,22 @@
                 </div>
                 <div class="form-group">
                     <label for="password">密码</label>
-                    <input type="password" id="password" name="password" placeholder="请输入密码（至少6个字符）" required>
+                    <div class="password-container">
+                        <input type="password" id="password" name="password" placeholder="请输入密码（至少6个字符）" required>
+                        <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('password', 'toggle-password-icon-1')" aria-label="显示/隐藏密码">
+                            <span class="toggle-password-icon" id="toggle-password-icon-1">👁️</span>
+                        </button>
+                    </div>
                     <small id="password-hint" class="hint"></small>
                 </div>
                 <div class="form-group">
                     <label for="confirm_password">确认密码</label>
-                    <input type="password" id="confirm_password" name="confirm_password" placeholder="请再次输入密码" required>
+                    <div class="password-container">
+                        <input type="password" id="confirm_password" name="confirm_password" placeholder="请再次输入密码" required>
+                        <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('confirm_password', 'toggle-password-icon-2')" aria-label="显示/隐藏密码">
+                            <span class="toggle-password-icon" id="toggle-password-icon-2">👁️</span>
+                        </button>
+                    </div>
                     <small id="confirm-password-hint" class="hint"></small>
                 </div>
                 <button type="submit" id="register-btn">注册</button>
@@ -39,45 +49,66 @@
     </div>
     
     <script>
-        // 表单验证
+        // 显示/隐藏密码功能
+        function togglePasswordVisibility(inputId, iconId) {
+            const passwordInput = document.getElementById(inputId);
+            const toggleBtn = document.getElementById(iconId);
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleBtn.textContent = '🙈';
+            } else {
+                passwordInput.type = 'password';
+                toggleBtn.textContent = '👁️';
+            }
+        }
+        
+        // 密码验证
+        document.getElementById('password').addEventListener('input', function() {
+            const password = this.value;
+            const passwordHint = document.getElementById('password-hint');
+            
+            if (password.length < 6) {
+                passwordHint.textContent = '密码长度不能少于6个字符';
+                passwordHint.style.color = '#e74c3c';
+            } else {
+                passwordHint.textContent = '密码强度：' + (password.length >= 10 ? '强' : '中');
+                passwordHint.style.color = password.length >= 10 ? '#2ecc71' : '#f39c12';
+            }
+        });
+        
+        // 确认密码验证
+        document.getElementById('confirm_password').addEventListener('input', function() {
+            const password = document.getElementById('password').value;
+            const confirmPassword = this.value;
+            const confirmPasswordHint = document.getElementById('confirm-password-hint');
+            
+            if (password !== confirmPassword) {
+                confirmPasswordHint.textContent = '两次输入的密码不一致';
+                confirmPasswordHint.style.color = '#e74c3c';
+            } else if (confirmPassword !== '') {
+                confirmPasswordHint.textContent = '密码一致';
+                confirmPasswordHint.style.color = '#2ecc71';
+            } else {
+                confirmPasswordHint.textContent = '';
+            }
+        });
+        
+        // 表单提交验证
         document.getElementById('register-form').addEventListener('submit', function(e) {
-            let isValid = true;
-            const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirm_password').value;
             
-            // 用户名验证
-            if (username.length < 2 || username.length > 20) {
-                document.getElementById('username-hint').textContent = '用户名长度必须在2-20个字符之间';
-                document.getElementById('username-hint').classList.add('error');
-                isValid = false;
-            } else {
-                document.getElementById('username-hint').textContent = '';
-                document.getElementById('username-hint').classList.remove('error');
-            }
-            
-            // 密码验证
             if (password.length < 6) {
-                document.getElementById('password-hint').textContent = '密码长度不能少于6个字符';
-                document.getElementById('password-hint').classList.add('error');
-                isValid = false;
-            } else {
-                document.getElementById('password-hint').textContent = '';
-                document.getElementById('password-hint').classList.remove('error');
-            }
-            
-            // 确认密码验证
-            if (password !== confirmPassword) {
-                document.getElementById('confirm-password-hint').textContent = '两次输入的密码不一致';
-                document.getElementById('confirm-password-hint').classList.add('error');
-                isValid = false;
-            } else {
-                document.getElementById('confirm-password-hint').textContent = '';
-                document.getElementById('confirm-password-hint').classList.remove('error');
-            }
-            
-            if (!isValid) {
                 e.preventDefault();
+                alert('密码长度不能少于6个字符');
+                return false;
+            }
+            
+            if (password !== confirmPassword) {
+                e.preventDefault();
+                alert('两次输入的密码不一致');
+                return false;
             }
         });
     </script>

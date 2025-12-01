@@ -74,6 +74,41 @@ body {
     transition: border-color 0.3s;
 }
 
+/* 密码输入框容器 */
+.password-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-container input {
+    padding-right: 3.5rem;
+}
+
+/* 显示/隐藏密码按钮 */
+.toggle-password-btn {
+    position: absolute;
+    right: 0.5rem;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 0.25rem;
+    color: #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.3s;
+}
+
+.toggle-password-btn:hover {
+    color: #333;
+}
+
+.toggle-password-btn:active {
+    transform: scale(0.95);
+}
+
 .form-group input:focus,
 .form-group select:focus {
     outline: none;
@@ -418,6 +453,31 @@ body {
 .system-message.error p {
     background: #f8d7da;
     color: #721c24;
+}
+
+/* 新闻消息样式 */
+.news-message .message-content {
+    background: #f0f4f8;
+    border-radius: 8px;
+    padding: 1rem;
+    white-space: pre-wrap;
+}
+
+/* 新闻链接样式 */
+.news-message a {
+    color: #4c6ef5;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid transparent;
+}
+
+.news-message a:hover {
+    color: #364fc7;
+    text-decoration: underline;
+}
+
+.news-message a:active {
+    color: #2b8a3e;
 }
 
 .message {

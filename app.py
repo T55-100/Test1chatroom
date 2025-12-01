@@ -313,6 +313,25 @@ def search_music(music_name):
         print(f"音乐搜索API调用失败: {e}")
         return {"code": 500, "msg": "音乐搜索失败", "data": None}
 
+def get_news_info():
+    """调用新闻API获取微博热搜信息"""
+    url = "https://v2.xxapi.cn/api/weibohot"
+    headers = {
+        'User-Agent': 'xiaoxiaoapi/1.0.0'
+    }
+    
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        result = response.json()
+        # 调试输出，查看完整的新闻数据结构
+        if result.get('code') == 200 and result.get('data'):
+            print(f"新闻API返回数据示例: {result['data'][0]}")
+        return result
+    except Exception as e:
+        print(f"新闻API调用失败: {e}")
+        return {"code": 500, "msg": "新闻获取失败", "data": None}
+
 
 
 @socketio.on('send_message')
@@ -396,6 +415,71 @@ def handle_message(data):
             }
             emit('receive_message', movie_msg, broadcast=True)
             message_history.append(movie_msg)
+        elif command == '@查新闻':
+            # 处理查新闻指令
+            # 先将用户的@查新闻消息广播给所有用户
+            user_msg = {
+                'nickname': nickname,
+                'message': message,
+                'type': 'text'
+            }
+            emit('receive_message', user_msg, broadcast=True)
+            message_history.append(user_msg)
+            
+            # 获取新闻信息
+            news_result = get_news_info()
+            
+            if news_result.get('code') == 200:
+                news_data = news_result.get('data', [])
+                if isinstance(news_data, list) and len(news_data) > 0:
+                    # 构建新闻消息
+                    news_message = "\n📢 新闻60秒 | 微博热搜榜\n"
+                    news_message += "-" * 30 + "\n"
+                    
+                    # 只显示前20条新闻
+                    for i, news in enumerate(news_data[:20], 1):
+                        index = news.get('index', i)
+                        title = news.get('title', '')
+                        hot = news.get('hot', '')
+                        url = news.get('url', '')  # 假设API返回url字段
+                        
+                        # 如果有url，将标题变为超链接
+                        if url:
+                            news_message += f"{index}. <a href='{url}' target='_blank'>{title}</a> 🔥{hot}\n"
+                        else:
+                            # 如果没有url，使用默认的搜索链接
+                            search_url = f"https://s.weibo.com/weibo?q={title}"
+                            news_message += f"{index}. <a href='{search_url}' target='_blank'>{title}</a> 🔥{hot}\n"
+                    
+                    news_message += "-" * 30 + "\n"
+                    news_message += "数据来源：微博热搜榜"
+                    
+                    # 发送新闻消息给所有用户
+                    news_msg = {
+                        'nickname': '系统',
+                        'message': news_message,
+                        'type': 'news'
+                    }
+                    emit('receive_message', news_msg, broadcast=True)
+                    message_history.append(news_msg)
+                else:
+                    # 新闻数据为空
+                    error_msg = {
+                        'nickname': '系统',
+                        'message': "新闻获取失败，未获取到有效数据",
+                        'type': 'text'
+                    }
+                    emit('receive_message', error_msg, broadcast=True)
+                    message_history.append(error_msg)
+            else:
+                # API调用失败
+                error_msg = {
+                    'nickname': '系统',
+                    'message': f"新闻获取失败，{news_result.get('msg', '未知错误')}",
+                    'type': 'text'
+                }
+                emit('receive_message', error_msg, broadcast=True)
+                message_history.append(error_msg)
         elif command == '@天气':
             # 处理天气查询指令
             if len(parts) > 1:
