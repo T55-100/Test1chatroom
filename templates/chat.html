@@ -12,9 +12,14 @@
         <!-- 头部 -->
         <div class="chat-header">
             <h2>Test1chatroom</h2>
-            <button id="exit-btn" class="exit-btn">
-                <i class="fas fa-sign-out-alt"></i> 退出
-            </button>
+            <div class="header-actions">
+                {% if session['role'] == 'admin' %}
+                <a href="/admin" class="admin-btn">管理</a>
+                {% endif %}
+                <a href="/logout" class="exit-btn" onclick="return confirm('确定要退出聊天室吗？')">
+                    <i class="fas fa-sign-out-alt"></i> 退出
+                </a>
+            </div>
         </div>
         
         <div class="chat-main">
@@ -180,10 +185,10 @@
             }
         }
          document.addEventListener('DOMContentLoaded', () => {
-            // 获取用户信息
-            const nickname = localStorage.getItem('nickname');
+            // 获取当前用户昵称（从服务器会话）
+            const nickname = "{{ session['username'] }}";
             
-            if (!nickname) {
+            if (!nickname || nickname === 'None') {
                 // 如果没有昵称信息，返回登录页
                 window.location.href = '/';
                 return;
@@ -204,20 +209,79 @@
             // 加入聊天室
             socket.emit('join', { nickname });
             
+            // 添加右键菜单HTML
+            const contextMenu = document.createElement('div');
+            contextMenu.id = 'context-menu';
+            contextMenu.className = 'context-menu';
+            contextMenu.innerHTML = `
+                <div class="context-menu-item" id="mute-user">禁言用户</div>
+                <div class="context-menu-item" id="kick-user">踢出用户</div>
+            `;
+            document.body.appendChild(contextMenu);
+            
+            // 当前选中的用户
+            let selectedUser = null;
+            
+            // 隐藏右键菜单
+            function hideContextMenu() {
+                contextMenu.style.display = 'none';
+            }
+            
+            // 显示右键菜单
+            function showContextMenu(event, user) {
+                selectedUser = user;
+                contextMenu.style.left = `${event.pageX}px`;
+                contextMenu.style.top = `${event.pageY}px`;
+                contextMenu.style.display = 'block';
+            }
+            
+            // 点击页面其他地方隐藏右键菜单
+            document.addEventListener('click', hideContextMenu);
+            
             // 更新在线用户列表
             function updateUsers(users) {
                 usersList.innerHTML = '';
                 users.forEach(user => {
                     const userElement = document.createElement('div');
                     userElement.classList.add('user-item');
+                    // 添加禁言标记
+                    const mutedMark = user.muted ? '<span class="muted-tag">（已禁言）</span>' : '';
                     userElement.innerHTML = `
                         <span class="user-status"></span>
-                        <span class="user-name">${user}</span>
-                        ${user === nickname ? '<span class="self-tag">(我)</span>' : ''}
+                        <span class="user-name">${user.username}</span>
+                        <span class="role-tag ${user.role}">${user.role === 'admin' ? '管理员' : '用户'}</span>
+                        ${mutedMark}
+                        ${user.username === nickname ? '<span class="self-tag">(我)</span>' : ''}
                     `;
+                    
+                    // 添加右键菜单事件（仅管理员可见，且不能对自己操作）
+                    const userRole = "{{ session['role'] }}";
+                    if (userRole === 'admin' && user.username !== nickname) {
+                        userElement.addEventListener('contextmenu', (e) => {
+                            e.preventDefault();
+                            showContextMenu(e, user);
+                        });
+                    }
+                    
                     usersList.appendChild(userElement);
                 });
             }
+            
+            // 禁言用户
+            document.getElementById('mute-user').addEventListener('click', () => {
+                if (selectedUser) {
+                    socket.emit('mute_user', { username: selectedUser.username });
+                    hideContextMenu();
+                }
+            });
+            
+            // 踢出用户
+            document.getElementById('kick-user').addEventListener('click', () => {
+                if (selectedUser) {
+                    socket.emit('kick_user', { username: selectedUser.username });
+                    hideContextMenu();
+                }
+            });
             
             // 选择音乐 - 绑定到window对象，供HTML onclick调用
             window.selectMusic = function(btn, music, index) {
@@ -394,8 +458,30 @@
                 if (message) {
                     socket.emit('send_message', { message });
                     messageInput.value = '';
+                    messageInput.focus();
                 }
             }
+            
+            // 处理历史消息
+            socket.on('load_history', function(data) {
+                const messages = data.messages;
+                if (messages && messages.length > 0) {
+                    // 清空当前消息列表（包括欢迎消息）
+                    chatMessages.innerHTML = '';
+                    // 加载所有历史消息
+                    messages.forEach(function(message) {
+                        addMessage(message);
+                    });
+                    // 滚动到底部
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
+            });
+            
+            // 处理被踢出
+            socket.on('kick_user', function() {
+                alert('您已被管理员踢出聊天室');
+                window.location.href = '/';
+            });
             
             // 事件监听器
             sendBtn.addEventListener('click', sendMessage);
@@ -407,14 +493,8 @@
                 }
             });
             
-            // 退出按钮
-            exitBtn.addEventListener('click', () => {
-                if (confirm('确定要退出聊天室吗？')) {
-                    socket.disconnect();
-                    localStorage.removeItem('nickname');
-                    window.location.href = '/';
-                }
-            });
+            // 退出功能已通过链接实现，移除事件监听器
+
             
             // Emoji选择器
             emojiBtn.addEventListener('click', () => {
